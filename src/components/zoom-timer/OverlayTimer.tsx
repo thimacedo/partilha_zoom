@@ -10,35 +10,31 @@ function formatTimeCompact(totalSeconds: number): string {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
-function getCompactTextColor(phase: TimerPhase, remaining: number): string {
+function getCompactTextColor(phase: TimerPhase, totalRemaining: number, phase2Seconds: number): string {
   if (phase === 'idle') return 'text-white'
   if (phase === 'timeUp') return 'text-red-300'
   if (phase === 'phaseTransition') return 'text-amber-300'
-  if (phase === 'phase1') {
-    if (remaining <= 30) return 'text-amber-300'
-    return 'text-emerald-300'
-  }
-  if (phase === 'phase2') {
-    if (remaining <= 30) return 'text-red-300'
-    if (remaining <= 60) return 'text-amber-300'
-    return 'text-amber-300'
-  }
-  return 'text-white'
+  
+  if (totalRemaining <= 30) return 'text-red-300'
+  if (totalRemaining <= phase2Seconds) return 'text-amber-300'
+  
+  const phase1Remaining = totalRemaining - phase2Seconds
+  if (phase1Remaining <= 30) return 'text-amber-300'
+  
+  return 'text-emerald-300'
 }
 
-function getCompactBg(phase: TimerPhase, remaining: number): string {
+function getCompactBg(phase: TimerPhase, totalRemaining: number, phase2Seconds: number): string {
   if (phase === 'idle') return 'bg-gray-900/95'
   if (phase === 'timeUp') return 'bg-red-950/95'
   if (phase === 'phaseTransition') return 'bg-amber-950/95'
-  if (phase === 'phase1') {
-    if (remaining <= 30) return 'bg-amber-950/95'
-    return 'bg-gray-900/95'
-  }
-  if (phase === 'phase2') {
-    if (remaining <= 30) return 'bg-red-950/95'
-    if (remaining <= 60) return 'bg-amber-950/95'
-    return 'bg-gray-900/95'
-  }
+  
+  if (totalRemaining <= 30) return 'bg-red-950/95'
+  if (totalRemaining <= phase2Seconds) return 'bg-amber-950/95'
+  
+  const phase1Remaining = totalRemaining - phase2Seconds
+  if (phase1Remaining <= 30) return 'bg-amber-950/95'
+  
   return 'bg-gray-900/95'
 }
 
@@ -62,17 +58,24 @@ export function OverlayTimer() {
     ? speakers[currentSpeakerIndex]
     : null
 
-  const textColor = getCompactTextColor(phase, remainingSeconds)
-  const bgColor = getCompactBg(phase, remainingSeconds)
+  const totalRemainingSeconds = 
+    phase === 'idle' ? (phase1Seconds + phase2Seconds) :
+    phase === 'phase1' ? (remainingSeconds + phase2Seconds) :
+    phase === 'phaseTransition' ? phase2Seconds :
+    phase === 'phase2' ? remainingSeconds :
+    0;
+
+  const totalDuration = phase1Seconds + phase2Seconds
+  const progress = totalDuration > 0 && phase !== 'idle' && phase !== 'timeUp'
+    ? ((totalDuration - totalRemainingSeconds) / totalDuration) * 100
+    : 0
+
+  const timeDisplay = formatTimeCompact(totalRemainingSeconds)
+  const textColor = getCompactTextColor(phase, totalRemainingSeconds, phase2Seconds)
+  const bgColor = getCompactBg(phase, totalRemainingSeconds, phase2Seconds)
 
   // Auto-show overlay when timer is running (natural Zoom behavior)
   const shouldShowOverlay = overlayVisible || isRunning || phase === 'timeUp'
-
-  // Progress for mini ring
-  const totalForPhase = phase === 'phase1' ? phase1Seconds : phase2Seconds
-  const progress = totalForPhase > 0 && (phase === 'phase1' || phase === 'phase2')
-    ? ((totalForPhase - remainingSeconds) / totalForPhase) * 100
-    : 0
 
   // Remaining time in phase 2 (shown during phase 1 so speaker knows what's ahead)
   const phase2TimeLabel = phase2Seconds >= 60
@@ -93,13 +96,13 @@ export function OverlayTimer() {
           {/* Main overlay row */}
           <div className="px-3 py-2 sm:px-3.5 sm:py-2.5 flex items-center gap-2">
             {/* Mini circular progress */}
-            {(phase === 'phase1' || phase === 'phase2') && totalForPhase > 0 && (
+            {phase !== 'idle' && phase !== 'timeUp' && totalDuration > 0 && (
               <div className="relative w-9 h-9 shrink-0">
                 <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
                   <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2.5" />
                   <circle
                     cx="18" cy="18" r="14" fill="none"
-                    stroke={phase === 'phase1' ? '#10b981' : remainingSeconds <= 30 ? '#ef4444' : '#f59e0b'}
+                    stroke={totalRemainingSeconds <= 30 ? '#ef4444' : totalRemainingSeconds <= phase2Seconds ? '#f59e0b' : '#10b981'}
                     strokeWidth="2.5" strokeLinecap="round"
                     strokeDasharray={`${2 * Math.PI * 14}`}
                     strokeDashoffset={`${2 * Math.PI * 14 * (1 - progress / 100)}`}
@@ -129,7 +132,7 @@ export function OverlayTimer() {
                   </span>
                 )}
                 <span className={`text-lg sm:text-xl font-bold tabular-nums leading-none ${textColor} transition-colors duration-500`}>
-                  {phase === 'idle' ? '--:--' : formatTimeCompact(remainingSeconds)}
+                  {timeDisplay}
                 </span>
                 {isPaused && (
                   <span className="text-[8px] font-bold text-amber-300 bg-amber-500/20 px-1 py-0.5 rounded leading-none">
@@ -146,7 +149,7 @@ export function OverlayTimer() {
                     <span className="text-white/40">+{phase2TimeLabel} na 2ª fase</span>
                     <span className="text-white/20">·</span>
                     <span className="text-white/40">
-                      total {formatTimeCompact(remainingSeconds + phase2Seconds)}
+                      total {formatTimeCompact(totalRemainingSeconds)}
                     </span>
                   </>
                 )}
@@ -154,7 +157,7 @@ export function OverlayTimer() {
                   <span className="text-white/40">fase final</span>
                 )}
                 {phase === 'idle' && (
-                  <span className="text-white/30">{formatTimeCompact(phase1Seconds)} + {formatTimeCompact(phase2Seconds)}</span>
+                  <span className="text-white/30">{formatTimeCompact(totalRemainingSeconds)} total</span>
                 )}
               </div>
             </div>

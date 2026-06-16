@@ -18,33 +18,32 @@ function getPhaseLabel(phase: TimerPhase): string {
   }
 }
 
-function getTextColor(phase: TimerPhase, remainingSeconds: number): string {
+function getTextColor(phase: TimerPhase, totalRemainingSeconds: number, phase2Seconds: number): string {
   if (phase === 'idle') return 'text-emerald-600 dark:text-emerald-400'
   if (phase === 'timeUp') return 'text-red-600 dark:text-red-400'
   if (phase === 'phaseTransition') return 'text-amber-600 dark:text-amber-400'
-  if (phase === 'phase1') {
-    if (remainingSeconds <= 30) return 'text-amber-600 dark:text-amber-400'
-    return 'text-emerald-600 dark:text-emerald-400'
-  }
-  if (phase === 'phase2') {
-    if (remainingSeconds <= 30) return 'text-red-600 dark:text-red-400'
-    return 'text-amber-600 dark:text-amber-400'
-  }
+  
+  if (totalRemainingSeconds <= 30) return 'text-red-600 dark:text-red-400'
+  if (totalRemainingSeconds <= phase2Seconds) return 'text-amber-600 dark:text-amber-400'
+  
+  const phase1Remaining = totalRemainingSeconds - phase2Seconds;
+  if (phase1Remaining <= 30) return 'text-amber-600 dark:text-amber-400'
+  
   return 'text-emerald-600 dark:text-emerald-400'
 }
 
-function getRingColor(phase: TimerPhase, remainingSeconds: number): string {
+function getRingColor(phase: TimerPhase, totalRemainingSeconds: number, phase2Seconds: number): string {
   if (phase === 'idle') return '#10b981' // emerald-500
-  if (phase === 'phase1') {
-    if (remainingSeconds <= 30) return '#f59e0b' // amber-500
-    return '#10b981' // emerald-500
-  }
-  if (phase === 'phase2') {
-    if (remainingSeconds <= 30) return '#ef4444' // red-500
-    return '#f59e0b' // amber-500
-  }
   if (phase === 'timeUp') return '#ef4444' // red-500
-  return '#10b981'
+  if (phase === 'phaseTransition') return '#f59e0b' // amber-500
+  
+  if (totalRemainingSeconds <= 30) return '#ef4444' // red-500
+  if (totalRemainingSeconds <= phase2Seconds) return '#f59e0b' // amber-500
+  
+  const phase1Remaining = totalRemainingSeconds - phase2Seconds;
+  if (phase1Remaining <= 30) return '#f59e0b' // amber-500
+  
+  return '#10b981' // emerald-500
 }
 
 export function TimerDisplay() {
@@ -62,16 +61,22 @@ export function TimerDisplay() {
     ? speakers[currentSpeakerIndex]
     : null
 
-  const timeDisplay = formatTime(remainingSeconds)
+  const totalRemainingSeconds = 
+    phase === 'idle' ? (phase1Seconds + phase2Seconds) :
+    phase === 'phase1' ? (remainingSeconds + phase2Seconds) :
+    phase === 'phaseTransition' ? phase2Seconds :
+    phase === 'phase2' ? remainingSeconds :
+    0;
+
+  const totalDuration = phase1Seconds + phase2Seconds;
+  const progress = totalDuration > 0 && phase !== 'idle' && phase !== 'timeUp'
+    ? ((totalDuration - totalRemainingSeconds) / totalDuration) * 100
+    : 0;
+
+  const timeDisplay = formatTime(totalRemainingSeconds)
   const phaseLabel = getPhaseLabel(phase)
-  const textColor = getTextColor(phase, remainingSeconds)
-
-  const totalForPhase = phase === 'phase1' ? phase1Seconds : phase2Seconds
-  const progress = totalForPhase > 0 && (phase === 'phase1' || phase === 'phase2')
-    ? ((totalForPhase - remainingSeconds) / totalForPhase) * 100
-    : 0
-
-  const ringColor = getRingColor(phase, remainingSeconds)
+  const textColor = getTextColor(phase, totalRemainingSeconds, phase2Seconds)
+  const ringColor = getRingColor(phase, totalRemainingSeconds, phase2Seconds)
 
   // SVG circular ring calculations
   const radius = 85
@@ -113,7 +118,7 @@ export function TimerDisplay() {
           )}
 
           {/* Progress stroke */}
-          {(phase === 'phase1' || phase === 'phase2') && (
+          {phase !== 'idle' && phase !== 'timeUp' && (
             <circle
               cx="100"
               cy="100"
@@ -158,7 +163,7 @@ export function TimerDisplay() {
 
           {/* Main time display */}
           <div className={`text-5xl sm:text-6xl md:text-7xl font-extrabold tabular-nums tracking-tight ${textColor} transition-colors duration-500 drop-shadow-sm`}>
-            {phase === 'idle' ? formatTime(phase1Seconds) : timeDisplay}
+            {timeDisplay}
           </div>
 
           {/* Active speaker (Spotlight) */}
@@ -185,17 +190,17 @@ export function TimerDisplay() {
           {/* Phase info */}
           {phase === 'idle' && (
             <div className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 text-center font-medium">
-              Configuração: {formatTime(phase1Seconds)} + {formatTime(phase2Seconds)}
+              Fase 1: {formatTime(phase1Seconds)} · Fase 2: {formatTime(phase2Seconds)}
             </div>
           )}
           {phase === 'phase1' && (
             <div className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 text-center">
-              <span>+ {formatTime(phase2Seconds)} na 2ª fase</span>
+              <span>Fase 1 · Restam {formatTime(remainingSeconds)}</span>
               <span className="mx-1">·</span>
-              <span className="font-semibold text-foreground">total {formatTime(remainingSeconds + phase2Seconds)}</span>
+              <span className="font-semibold text-foreground">total {formatTime(totalRemainingSeconds)}</span>
             </div>
           )}
-          {phase === 'phase2' && totalForPhase > 0 && (
+          {phase === 'phase2' && (
             <div className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 text-center font-medium">
               Fase final · {formatTime(remainingSeconds)} restantes
             </div>

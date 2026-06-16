@@ -20,48 +20,45 @@ function getPhaseLabel(phase: TimerPhase): string {
   }
 }
 
-function getBgColor(phase: TimerPhase, remaining: number): string {
+function getBgColor(phase: TimerPhase, totalRemaining: number, phase2Seconds: number): string {
   if (phase === 'idle') return 'from-gray-900 to-gray-950'
   if (phase === 'timeUp') return 'from-red-950 to-red-950'
   if (phase === 'phaseTransition') return 'from-amber-950 to-amber-950'
-  if (phase === 'phase1') {
-    if (remaining <= 30) return 'from-amber-950 to-gray-950'
-    return 'from-emerald-950 to-gray-950'
-  }
-  if (phase === 'phase2') {
-    if (remaining <= 30) return 'from-red-950 to-gray-950'
-    if (remaining <= 60) return 'from-amber-950 to-gray-950'
-    return 'from-amber-950/50 to-gray-950'
-  }
-  return 'from-gray-900 to-gray-950'
+  
+  if (totalRemaining <= 30) return 'from-red-950 to-gray-950'
+  if (totalRemaining <= phase2Seconds) return 'from-amber-950 to-gray-950'
+  
+  const phase1Remaining = totalRemaining - phase2Seconds
+  if (phase1Remaining <= 30) return 'from-amber-950 to-gray-950'
+  
+  return 'from-emerald-950 to-gray-950'
 }
 
-function getTimerColor(phase: TimerPhase, remaining: number): string {
-  if (phase === 'idle') return 'text-white/60'
+function getTimerColor(phase: TimerPhase, totalRemaining: number, phase2Seconds: number): string {
+  if (phase === 'idle') return 'text-white/80'
   if (phase === 'timeUp') return 'text-red-400'
   if (phase === 'phaseTransition') return 'text-amber-400'
-  if (phase === 'phase1') {
-    if (remaining <= 30) return 'text-amber-400'
-    return 'text-emerald-400'
-  }
-  if (phase === 'phase2') {
-    if (remaining <= 30) return 'text-red-400'
-    if (remaining <= 60) return 'text-amber-400'
-    return 'text-amber-400'
-  }
-  return 'text-white'
+  
+  if (totalRemaining <= 30) return 'text-red-400'
+  if (totalRemaining <= phase2Seconds) return 'text-amber-400'
+  
+  const phase1Remaining = totalRemaining - phase2Seconds
+  if (phase1Remaining <= 30) return 'text-amber-400'
+  
+  return 'text-emerald-400'
 }
 
-function getRingStroke(phase: TimerPhase, remaining: number): string {
-  if (phase === 'phase1') {
-    if (remaining <= 30) return '#f59e0b'
-    return '#10b981'
-  }
-  if (phase === 'phase2') {
-    if (remaining <= 30) return '#ef4444'
-    if (remaining <= 60) return '#f59e0b'
-    return '#f59e0b'
-  }
+function getRingStroke(phase: TimerPhase, totalRemaining: number, phase2Seconds: number): string {
+  if (phase === 'idle') return '#10b981'
+  if (phase === 'timeUp') return '#ef4444'
+  if (phase === 'phaseTransition') return '#f59e0b'
+  
+  if (totalRemaining <= 30) return '#ef4444'
+  if (totalRemaining <= phase2Seconds) return '#f59e0b'
+  
+  const phase1Remaining = totalRemaining - phase2Seconds
+  if (phase1Remaining <= 30) return '#f59e0b'
+  
   return '#10b981'
 }
 
@@ -91,16 +88,23 @@ export function FullscreenTimer() {
     ? speakers[currentSpeakerIndex]
     : null
 
-  const totalForPhase = phase === 'phase1' ? phase1Seconds : phase2Seconds
-  const progress = totalForPhase > 0 && (phase === 'phase1' || phase === 'phase2')
-    ? ((totalForPhase - remainingSeconds) / totalForPhase) * 100
+  const totalRemainingSeconds = 
+    phase === 'idle' ? (phase1Seconds + phase2Seconds) :
+    phase === 'phase1' ? (remainingSeconds + phase2Seconds) :
+    phase === 'phaseTransition' ? phase2Seconds :
+    phase === 'phase2' ? remainingSeconds :
+    0;
+
+  const totalDuration = phase1Seconds + phase2Seconds
+  const progress = totalDuration > 0 && phase !== 'idle' && phase !== 'timeUp'
+    ? ((totalDuration - totalRemainingSeconds) / totalDuration) * 100
     : 0
 
   // SVG circular ring
   const radius = 140
   const circumference = 2 * Math.PI * radius
   const strokeDashoffset = circumference - (progress / 100) * circumference
-  const ringStroke = getRingStroke(phase, remainingSeconds)
+  const ringStroke = getRingStroke(phase, totalRemainingSeconds, phase2Seconds)
 
   if (!fullscreenMode) return null
 
@@ -110,7 +114,7 @@ export function FullscreenTimer() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className={`fixed inset-0 z-50 bg-gradient-to-br ${getBgColor(phase, remainingSeconds)} flex flex-col items-center justify-center transition-colors duration-1000`}
+        className={`fixed inset-0 z-50 bg-gradient-to-br ${getBgColor(phase, totalRemainingSeconds, phase2Seconds)} flex flex-col items-center justify-center transition-colors duration-1000`}
       >
         {/* Top controls */}
         <div className="absolute top-4 right-4 flex items-center gap-2 opacity-20 hover:opacity-100 transition-opacity">
@@ -138,7 +142,7 @@ export function FullscreenTimer() {
 
           {/* Circular ring + time */}
           <div className="relative w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] md:w-[440px] md:h-[440px]">
-            {(phase === 'phase1' || phase === 'phase2') && totalForPhase > 0 && (
+            {phase !== 'idle' && phase !== 'timeUp' && totalDuration > 0 && (
               <svg className="absolute inset-0 -rotate-90" viewBox="0 0 320 320">
                 <circle cx="160" cy="160" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
                 <circle
@@ -151,8 +155,8 @@ export function FullscreenTimer() {
               </svg>
             )}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className={`text-[6rem] sm:text-[8rem] md:text-[10rem] font-bold tabular-nums tracking-tighter leading-none ${getTimerColor(phase, remainingSeconds)} transition-colors duration-1000`}>
-                {phase === 'idle' ? '--:--' : formatTime(remainingSeconds)}
+              <div className={`text-[6rem] sm:text-[8rem] md:text-[10rem] font-bold tabular-nums tracking-tighter leading-none ${getTimerColor(phase, totalRemainingSeconds, phase2Seconds)} transition-colors duration-1000`}>
+                {formatTime(totalRemainingSeconds)}
               </div>
             </div>
           </div>
@@ -161,7 +165,7 @@ export function FullscreenTimer() {
           {phase === 'phase1' && (
             <div className="text-center mt-1">
               <div className="text-white/30 text-sm">
-                + {formatTime(phase2Seconds)} na 2ª fase · restam {formatTime(remainingSeconds + phase2Seconds)} no total
+                Fase 1 · Restam {formatTime(remainingSeconds)} · total {formatTime(totalRemainingSeconds)}
               </div>
             </div>
           )}
