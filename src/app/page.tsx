@@ -52,7 +52,7 @@ export default function Home() {
                 <Timer className="h-4 w-4" />
               </div>
               <div>
-                <h1 className="text-base font-bold leading-tight">Zoom Timer</h1>
+                <h1 className="text-base font-bold leading-tight">SPH Timer</h1>
                 <p className="text-[10px] text-muted-foreground leading-tight hidden sm:block">Cronômetro para reuniões</p>
               </div>
             </div>
@@ -70,7 +70,7 @@ export default function Home() {
                     <p><kbd className="font-mono bg-muted px-1 rounded">Espaço</kbd> Pausar/Retomar</p>
                     <p><kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> Reiniciar/Sair</p>
                     <p><kbd className="font-mono bg-muted px-1 rounded">F</kbd> Tela cheia</p>
-                    <p><kbd className="font-mono bg-muted px-1 rounded">O</kbd> Overlay Zoom</p>
+                    <p><kbd className="font-mono bg-muted px-1 rounded">O</kbd> Overlay SPH</p>
                     <p><kbd className="font-mono bg-muted px-1 rounded">M</kbd> Som</p>
                     <p><kbd className="font-mono bg-muted px-1 rounded">D</kbd> Tema</p>
                     <p><kbd className="font-mono bg-muted px-1 rounded">N</kbd> Próximo falante</p>
@@ -129,7 +129,7 @@ export default function Home() {
                     <p>Adicione participantes na ordem das mãos levantadas ou entrada.</p>
                   </div>
                   <div className="p-2 bg-background/50 rounded-lg">
-                    <p className="font-medium text-foreground mb-0.5">📺 Modo Zoom</p>
+                    <p className="font-medium text-foreground mb-0.5">📺 Modo SPH</p>
                     <p>O timer aparece automaticamente no canto da tela ao iniciar.</p>
                   </div>
                   <div className="p-2 bg-background/50 rounded-lg">
@@ -142,7 +142,7 @@ export default function Home() {
           )}
           <div className="border-t border-border/50 bg-card/30 px-4 py-2">
             <div className="max-w-5xl mx-auto flex items-center justify-between text-[10px] text-muted-foreground">
-              <span>Zoom Timer · Zoom · Google Meet · Teams</span>
+              <span>SPH Timer · Zoom · Google Meet · Teams</span>
               <span className="hidden sm:inline">Responsivo · PC · Android · iOS</span>
             </div>
           </div>

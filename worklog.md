@@ -1,7 +1,7 @@
-# Zoom Timer - Worklog
+# SPH Timer - Worklog
 
 ## Project Status
-Zoom Timer is fully functional with all requested features. The overlay timer now auto-shows when running (like Zoom's native timer), displays both phase times during phase 1, and shows phase transition messages directly in the overlay widget.
+SPH Timer is fully functional with all requested features. The overlay timer now auto-shows when running (like Zoom's native timer), displays both phase times during phase 1, and shows phase transition messages directly in the overlay widget.
 
 ## Phase 3 Changes (This Round)
 

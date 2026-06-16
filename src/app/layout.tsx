@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zoom Timer - Cronômetro para Reuniões",
+  title: "SPH Timer - Cronômetro para Reuniões",
   description: "Cronômetro de duas fases para reuniões no Zoom, Google Meet e Teams. Compatível com PC, Android e iOS.",
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",

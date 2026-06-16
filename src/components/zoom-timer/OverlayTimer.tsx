@@ -261,10 +261,10 @@ export function OverlayToggleButton() {
           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
           : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
       }`}
-      title={isActive ? 'Ocultar timer na tela' : 'Mostrar timer na tela (Zoom)'}
+      title={isActive ? 'Ocultar timer na tela' : 'Mostrar timer na tela (SPH)'}
     >
       {isActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-      <span className="hidden sm:inline">{isActive ? 'Visível' : 'Zoom'}</span>
+      <span className="hidden sm:inline">{isActive ? 'Visível' : 'SPH'}</span>
     </button>
   )
 }
