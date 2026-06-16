@@ -2,22 +2,12 @@
 
 import { useTimerStore, TimerPhase } from '@/store/timer-store'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Maximize2, Minimize2, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react'
+import { Volume2, VolumeX, Eye, EyeOff } from 'lucide-react'
 
 function formatTimeCompact(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60)
   const secs = totalSeconds % 60
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-}
-
-function getPhaseShortLabel(phase: TimerPhase): string {
-  switch (phase) {
-    case 'idle': return ''
-    case 'phase1': return '1ª'
-    case 'phaseTransition': return '→'
-    case 'phase2': return '2ª'
-    case 'timeUp': return 'FIM'
-  }
 }
 
 function getCompactTextColor(phase: TimerPhase, remaining: number): string {
@@ -65,6 +55,8 @@ export function OverlayTimer() {
   const currentSpeakerIndex = useTimerStore((s) => s.currentSpeakerIndex)
   const phase1Seconds = useTimerStore((s) => s.phase1Seconds)
   const phase2Seconds = useTimerStore((s) => s.phase2Seconds)
+  const showPhaseTransition = useTimerStore((s) => s.showPhaseTransition)
+  const dismissPhaseTransition = useTimerStore((s) => s.dismissPhaseTransition)
 
   const currentSpeaker = currentSpeakerIndex >= 0 && currentSpeakerIndex < speakers.length
     ? speakers[currentSpeakerIndex]
@@ -72,7 +64,6 @@ export function OverlayTimer() {
 
   const textColor = getCompactTextColor(phase, remainingSeconds)
   const bgColor = getCompactBg(phase, remainingSeconds)
-  const phaseLabel = getPhaseShortLabel(phase)
 
   // Auto-show overlay when timer is running (natural Zoom behavior)
   const shouldShowOverlay = overlayVisible || isRunning || phase === 'timeUp'
@@ -82,6 +73,11 @@ export function OverlayTimer() {
   const progress = totalForPhase > 0 && (phase === 'phase1' || phase === 'phase2')
     ? ((totalForPhase - remainingSeconds) / totalForPhase) * 100
     : 0
+
+  // Remaining time in phase 2 (shown during phase 1 so speaker knows what's ahead)
+  const phase2TimeLabel = phase2Seconds >= 60
+    ? `${Math.floor(phase2Seconds / 60)}min`
+    : `${phase2Seconds}s`
 
   if (!shouldShowOverlay) return null
 
@@ -94,56 +90,87 @@ export function OverlayTimer() {
         className="fixed top-3 right-3 z-50"
       >
         <div className={`${bgColor} backdrop-blur-md rounded-xl shadow-2xl border border-white/10 overflow-hidden transition-colors duration-500`}>
-          <div className="p-2.5 sm:p-3 flex items-center gap-2.5">
+          {/* Main overlay row */}
+          <div className="px-3 py-2 sm:px-3.5 sm:py-2.5 flex items-center gap-2">
             {/* Mini circular progress */}
             {(phase === 'phase1' || phase === 'phase2') && totalForPhase > 0 && (
-              <div className="relative w-10 h-10 shrink-0">
-                <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
-                  <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
+              <div className="relative w-9 h-9 shrink-0">
+                <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2.5" />
                   <circle
-                    cx="20" cy="20" r="16" fill="none"
+                    cx="18" cy="18" r="14" fill="none"
                     stroke={phase === 'phase1' ? '#10b981' : remainingSeconds <= 30 ? '#ef4444' : '#f59e0b'}
-                    strokeWidth="3" strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 16}`}
-                    strokeDashoffset={`${2 * Math.PI * 16 * (1 - progress / 100)}`}
+                    strokeWidth="2.5" strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 14}`}
+                    strokeDashoffset={`${2 * Math.PI * 14 * (1 - progress / 100)}`}
                     className="transition-all duration-1000 ease-linear"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-[8px] font-bold ${textColor}`}>{phaseLabel}</span>
+                  <span className={`text-[7px] font-bold ${textColor}`}>
+                    {phase === 'phase1' ? '1ª' : '2ª'}
+                  </span>
                 </div>
               </div>
             )}
 
-            {/* Timer display */}
-            <div className="flex items-center gap-2">
-              {(phase === 'idle' || phase === 'timeUp') && phaseLabel && (
-                <span className={`text-[9px] font-bold uppercase tracking-wider ${textColor} bg-white/10 px-1.5 py-0.5 rounded`}>
-                  {phaseLabel}
+            {/* Timer info column */}
+            <div className="flex flex-col gap-0.5 min-w-0">
+              {/* Main time row */}
+              <div className="flex items-center gap-1.5">
+                {phase === 'idle' && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 bg-white/10 px-1.5 py-0.5 rounded">
+                    PRONTO
+                  </span>
+                )}
+                {phase === 'timeUp' && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-red-300 bg-red-500/20 px-1.5 py-0.5 rounded">
+                    FIM
+                  </span>
+                )}
+                <span className={`text-lg sm:text-xl font-bold tabular-nums leading-none ${textColor} transition-colors duration-500`}>
+                  {phase === 'idle' ? '--:--' : formatTimeCompact(remainingSeconds)}
                 </span>
-              )}
-              <span className={`text-xl sm:text-2xl font-bold tabular-nums ${textColor} transition-colors duration-500`}>
-                {phase === 'idle' ? '--:--' : formatTimeCompact(remainingSeconds)}
-              </span>
-              {isPaused && (
-                <span className="text-[9px] font-bold text-amber-300 bg-amber-500/20 px-1.5 py-0.5 rounded">
-                  PAUSE
-                </span>
-              )}
+                {isPaused && (
+                  <span className="text-[8px] font-bold text-amber-300 bg-amber-500/20 px-1 py-0.5 rounded leading-none">
+                    PAUSE
+                  </span>
+                )}
+              </div>
+
+              {/* Phase info sub-row */}
+              <div className="flex items-center gap-1.5 text-[9px] leading-none">
+                {phase === 'phase1' && (
+                  <>
+                    {/* Show that phase 2 still exists */}
+                    <span className="text-white/40">+{phase2TimeLabel} na 2ª fase</span>
+                    <span className="text-white/20">·</span>
+                    <span className="text-white/40">
+                      total {formatTimeCompact(remainingSeconds + phase2Seconds)}
+                    </span>
+                  </>
+                )}
+                {phase === 'phase2' && (
+                  <span className="text-white/40">fase final</span>
+                )}
+                {phase === 'idle' && (
+                  <span className="text-white/30">{formatTimeCompact(phase1Seconds)} + {formatTimeCompact(phase2Seconds)}</span>
+                )}
+              </div>
             </div>
 
             {/* Current speaker */}
             {currentSpeaker && (
-              <div className="hidden sm:flex items-center gap-1 pl-2 border-l border-white/20">
+              <div className="hidden sm:flex items-center gap-1 pl-2 border-l border-white/20 shrink-0">
                 <span className="text-[10px] text-white/60">👤</span>
-                <span className="text-xs font-medium text-white/90 max-w-[80px] truncate">
+                <span className="text-[11px] font-medium text-white/90 max-w-[80px] truncate">
                   {currentSpeaker.name}
                 </span>
               </div>
             )}
 
             {/* Controls */}
-            <div className="flex items-center gap-0.5 pl-2 border-l border-white/20">
+            <div className="flex items-center gap-0.5 pl-2 border-l border-white/20 shrink-0">
               <button
                 onClick={toggleSound}
                 className="p-1.5 rounded hover:bg-white/10 transition-colors"
@@ -161,18 +188,57 @@ export function OverlayTimer() {
             </div>
           </div>
 
-          {/* Time up overlay animation */}
-          {phase === 'timeUp' && (
-            <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: 'auto' }}
-              className="bg-red-600/30 border-t border-red-400/30 px-3 py-1.5"
-            >
-              <div className="text-center text-xs font-bold text-red-200">
-                Tempo esgotado!
-              </div>
-            </motion.div>
-          )}
+          {/* Phase transition message in overlay */}
+          <AnimatePresence>
+            {showPhaseTransition && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-amber-500/20 border-t border-amber-400/30 px-3 py-2 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-amber-300 text-xs shrink-0">⚠</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-amber-200 text-[11px] font-semibold leading-tight">
+                        Fim da 1ª fase!
+                      </span>
+                      <span className="text-amber-300/80 text-[10px] leading-tight">
+                        Ainda restam {phase2TimeLabel} na 2ª fase
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={dismissPhaseTransition}
+                    className="text-[10px] text-amber-300/80 hover:text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 px-2 py-1 rounded shrink-0 transition-colors"
+                  >
+                    Continuar →
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Time up message in overlay */}
+          <AnimatePresence>
+            {phase === 'timeUp' && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-red-600/30 border-t border-red-400/30 px-3 py-2 text-center">
+                  <span className="text-xs font-bold text-red-200">
+                    ⏰ Tempo esgotado!
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </AnimatePresence>
@@ -185,7 +251,6 @@ export function OverlayToggleButton() {
   const isRunning = useTimerStore((s) => s.isRunning)
   const phase = useTimerStore((s) => s.phase)
 
-  // Overlay auto-shows when running, so the toggle controls whether it stays visible when idle
   const isActive = overlayMode || isRunning || phase === 'timeUp'
 
   return (

@@ -1,69 +1,63 @@
 # Zoom Timer - Worklog
 
 ## Project Status
-Zoom Timer is fully functional with all requested features implemented and tested. The app is responsive (PC, Android, iOS), compatible with Zoom/Meet/Teams, and includes auto-overlay, dark mode, and session history.
+Zoom Timer is fully functional with all requested features. The overlay timer now auto-shows when running (like Zoom's native timer), displays both phase times during phase 1, and shows phase transition messages directly in the overlay widget.
 
-## Phase 2 Changes (This Round)
+## Phase 3 Changes (This Round)
 
 ### User-Requested Changes
-1. **✅ Zoom overlay auto-appears** - Timer overlay now naturally shows in the upper-right corner when the timer starts running. No need to manually enable "Modo Zoom". The button in the header now shows "Visível" when the overlay is active and "Zoom" when it's hidden. User can toggle visibility.
-2. **✅ Config in one line on desktop** - All configuration (presets, phase inputs, action buttons, sound/dark mode) are now in a single horizontal row on `lg:` screens. Mobile still stacks vertically.
-3. **✅ "Como usar" moved to bottom** - The how-to-use section is now a footer section at the bottom of the app, only visible when the timer is idle.
+1. **✅ Overlay shows both phase times during Phase 1** — When in phase 1, the overlay now displays:
+   - Phase 2 remaining time: `+ 02:00 na 2ª fase`
+   - Total remaining time: `total 04:49`
+   - This lets the speaker know they still have the full time ahead
 
-### Styling Enhancements
-4. **✅ Circular SVG timer ring** - Beautiful SVG circular progress ring around the timer display in both normal and fullscreen modes. The ring changes color based on phase (green → amber → red).
-5. **✅ Dark mode toggle** - Added Moon/Sun toggle button. Dark mode synced with `<html>` element class for Tailwind `dark:` variant support.
-6. **✅ Mini circular ring in overlay** - The overlay timer now includes a small SVG circular progress indicator.
+2. **✅ Phase transition message in overlay** — When phase 1 ends, a compact alert appears directly inside the overlay widget:
+   - Title: "Fim da 1ª fase!"
+   - Subtitle: "Ainda restam Xmin na 2ª fase"
+   - "Continuar →" button to dismiss
 
-### New Features
-7. **✅ localStorage persistence** - Timer config (phase durations, custom message, sound, dark mode, speaker list, session history) persists across page refreshes.
-8. **✅ Session history** - Each timer run is logged with speaker name, durations, timestamp, and completion status. Visible as a compact list in the sidebar.
-9. **✅ Seconds precision in store** - Store now uses `phase1Seconds`/`phase2Seconds` internally for flexibility, while UI still shows minutes for simplicity.
+3. **✅ Time-up message in overlay** — When the full time expires, the overlay shows:
+   - "⏰ Tempo esgotado!" in a red bar
 
-### Store Migration
-- `phase1Minutes` → `phase1Seconds` (180 = 3 min default)
-- `phase2Minutes` → `phase2Seconds` (120 = 2 min default)
-- Added `darkMode`, `sessionHistory`, `currentSessionId` fields
-- Added `clearHistory()` action
-- Added localStorage save/load helpers
+### Overlay Timer Redesign
+- More compact layout with 2-row info structure
+- Top row: mini circular progress + main countdown + phase label
+- Bottom row: phase info (+ Xmin na 2ª fase · total XX:XX) during phase 1, "fase final" during phase 2
+- Phase transition appears as an expandable section within the overlay
+- Time-up appears as a red bar within the overlay
 
-## Files Modified This Round
-- `src/store/timer-store.ts` - Complete rewrite with seconds precision, localStorage, session history, dark mode
-- `src/components/zoom-timer/TimerSetup.tsx` - Single-line layout, dark mode toggle
-- `src/components/zoom-timer/TimerDisplay.tsx` - Circular SVG timer ring, cleaner layout
-- `src/components/zoom-timer/PhaseAlert.tsx` - Updated for seconds-based store
-- `src/components/zoom-timer/SpeakerQueue.tsx` - More compact styling
-- `src/components/zoom-timer/OverlayTimer.tsx` - Auto-show when running, mini SVG ring
-- `src/components/zoom-timer/FullscreenTimer.tsx` - SVG circular ring, updated store refs
-- `src/components/zoom-timer/use-keyboard-shortcuts.ts` - Added D key for dark mode
-- `src/components/zoom-timer/DarkModeSync.tsx` - New component for HTML class sync
-- `src/components/zoom-timer/SessionHistory.tsx` - New component for session log
-- `src/app/page.tsx` - Reorganized layout (config top, timer center, tips bottom)
-- `src/app/layout.tsx` - Updated metadata, removed DarkModeSync (moved to page)
+### Fullscreen Timer Enhancement
+- Added phase 2 info during phase 1: `+ 02:00 na 2ª fase · restam 04:49 no total`
+
+### Main Timer Display Enhancement
+- During phase 1: shows `+ 02:00 na 2ª fase · total 04:49`
+- During phase 2: shows `02:00 total desta fase`
 
 ## Complete Feature List
 
 ### Core Timer
 - Two-phase countdown with configurable durations
 - Quick presets (3+2, 4+1, 5+5, 7+3, 10+5, 2+1)
-- Phase transition alert card
+- Phase transition alert card (main view + overlay)
 - "Tempo esgotado" card with customizable message
 - Sound alerts (Web Audio API)
-- Play/Pause/Resume/Reset controls
-- Circular SVG progress ring
+- Circular SVG progress ring (main + overlay + fullscreen)
 - Color changes (green → amber → red)
+- **Both phase times shown during phase 1** (speaker sees full picture)
+
+### Zoom-Style Overlay Timer
+- Auto-appears when timer starts running
+- Shows current countdown with mini circular progress
+- Shows phase 2 remaining + total during phase 1
+- Shows phase transition message with "Continuar" button
+- Shows "⏰ Tempo esgotado!" at the end
+- Current speaker name
+- Sound/visibility toggle controls
 
 ### Speaker Queue
 - Add/remove/reorder speakers
 - Current speaker highlighting
 - Auto-advance with timer reset
-- Clear all option
-
-### Zoom Compatibility
-- **Auto-overlay** - Timer appears in upper-right when running
-- **Fullscreen mode** - Large display for screen sharing
-- Mini circular progress in overlay
-- Current speaker display in both modes
 
 ### UX Features
 - Dark mode toggle (persisted)
@@ -71,10 +65,10 @@ Zoom Timer is fully functional with all requested features implemented and teste
 - localStorage persistence
 - Session history log
 - Custom end message
+- Fullscreen mode for Zoom screen sharing
 - Responsive (PC, Android, iOS)
 
-## Unresolved / Next Steps
-- Could add mm:ss input precision (currently only minutes in UI)
-- Could add PWA manifest for mobile install
-- Could add export/import speaker list
-- Could add Zoom App Marketplace SDK integration
+## Files Modified This Round
+- `src/components/zoom-timer/OverlayTimer.tsx` — Complete redesign with 2-row layout, phase transition in overlay, phase 2 info
+- `src/components/zoom-timer/FullscreenTimer.tsx` — Added phase 2 info during phase 1
+- `src/components/zoom-timer/TimerDisplay.tsx` — Added phase 2 info during phase 1

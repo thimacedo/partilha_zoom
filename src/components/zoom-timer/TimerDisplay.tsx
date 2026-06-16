@@ -147,8 +147,15 @@ export function TimerDisplay() {
             }`} />
           </div>
 
-          {/* Total time info */}
-          {(phase === 'phase1' || phase === 'phase2') && totalForPhase > 0 && (
+          {/* Phase info */}
+          {phase === 'phase1' && (
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 text-center">
+              <span>+ {formatTime(phase2Seconds)} na 2ª fase</span>
+              <span className="mx-1">·</span>
+              <span className="font-medium">total {formatTime(remainingSeconds + phase2Seconds)}</span>
+            </div>
+          )}
+          {phase === 'phase2' && totalForPhase > 0 && (
             <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
               {formatTime(totalForPhase)} total desta fase
             </div>

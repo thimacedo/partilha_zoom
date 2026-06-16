@@ -157,6 +157,15 @@ export function FullscreenTimer() {
             </div>
           </div>
 
+          {/* Phase 2 info during Phase 1 */}
+          {phase === 'phase1' && (
+            <div className="text-center mt-1">
+              <div className="text-white/30 text-sm">
+                + {formatTime(phase2Seconds)} na 2ª fase · restam {formatTime(remainingSeconds + phase2Seconds)} no total
+              </div>
+            </div>
+          )}
+
           {/* Current speaker */}
           {currentSpeaker && (
             <div className="mt-1 text-center">
