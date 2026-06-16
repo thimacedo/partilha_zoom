@@ -25,7 +25,7 @@ import { Share2, Users } from 'lucide-react'
 export default function Home() {
   useTimer()
   useKeyboardShortcuts()
-  const { isInZoom, shareApp, sendInvitation } = useZoomSdk()
+  const { isInZoom, isHostOrCoHost, shareApp, sendInvitation } = useZoomSdk()
 
   // Sync dark mode class on <html>
   const darkMode = useTimerStore((s) => s.darkMode)
@@ -46,7 +46,7 @@ export default function Home() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-slate-50/30 to-slate-100/30 dark:from-background dark:via-zinc-950/20 dark:to-slate-900/20">
         {/* Header */}
         <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between">
@@ -76,7 +76,7 @@ export default function Home() {
                     <p><kbd className="font-mono bg-muted px-1 rounded">O</kbd> Overlay SPH</p>
                     <p><kbd className="font-mono bg-muted px-1 rounded">M</kbd> Som</p>
                     <p><kbd className="font-mono bg-muted px-1 rounded">D</kbd> Tema</p>
-                    <p><kbd className="font-mono bg-muted px-1 rounded">N</kbd> Próximo falante</p>
+                    <p><kbd className="font-mono bg-muted px-1 rounded">N</kbd> Próxima partilha</p>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -128,7 +128,7 @@ export default function Home() {
 
             {/* Speaker queue + history */}
             <div className="lg:col-span-1 space-y-4">
-              <SpeakerQueue />
+              <SpeakerQueue isInZoom={isInZoom} isHostOrCoHost={isHostOrCoHost} />
               <SessionHistory />
             </div>
           </div>
@@ -148,8 +148,8 @@ export default function Home() {
                     <p>Configure os tempos. Ao fim da 1ª fase, um aviso mostra o tempo restante.</p>
                   </div>
                   <div className="p-2 bg-background/50 rounded-lg">
-                    <p className="font-medium text-foreground mb-0.5">👥 Fila de falantes</p>
-                    <p>Adicione participantes na ordem das mãos levantadas ou entrada.</p>
+                    <p className="font-medium text-foreground mb-0.5">👥 Ordem de partilhas</p>
+                    <p>Adicione participantes manualmente ou ative a detecção de mãos levantadas.</p>
                   </div>
                   <div className="p-2 bg-background/50 rounded-lg">
                     <p className="font-medium text-foreground mb-0.5">📺 Modo SPH</p>

@@ -32,7 +32,7 @@ export function SessionHistory() {
   if (sessionHistory.length === 0) return null
 
   return (
-    <Card className="w-full border-border/50 shadow-sm">
+    <Card className="w-full border-border/60 bg-card/40 backdrop-blur-md shadow-lg rounded-2xl overflow-hidden transition-all duration-300">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-sm">

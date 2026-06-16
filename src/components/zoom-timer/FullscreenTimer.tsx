@@ -169,7 +169,7 @@ export function FullscreenTimer() {
           {/* Current speaker */}
           {currentSpeaker && (
             <div className="mt-1 text-center">
-              <div className="text-white/40 text-sm uppercase tracking-wider mb-0.5">Falante</div>
+              <div className="text-white/40 text-sm uppercase tracking-wider mb-0.5">Em Partilha</div>
               <div className="text-white text-2xl sm:text-3xl font-semibold">{currentSpeaker.name}</div>
             </div>
           )}
