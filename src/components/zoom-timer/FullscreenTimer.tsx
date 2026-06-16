@@ -180,15 +180,14 @@ export function FullscreenTimer() {
 
           {/* Phase transition alert */}
           {showPhaseTransition && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-amber-500/20 border border-amber-400/30 rounded-2xl px-8 py-5 text-center">
-              <div className="text-amber-400 text-3xl sm:text-4xl font-bold mb-1">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-amber-500/20 border border-amber-400/30 rounded-2xl px-10 py-6 text-center flex flex-col items-center justify-center relative">
+              <div className="text-amber-400 text-4xl sm:text-5xl font-extrabold tracking-tight mb-2">
                 {phase2Seconds >= 60 
-                  ? `${Math.floor(phase2Seconds / 60)} ${Math.floor(phase2Seconds / 60) === 1 ? 'minuto' : 'minutos'}`
-                  : `${phase2Seconds} segundos`
+                  ? `${Math.floor(phase2Seconds / 60)} ${Math.floor(phase2Seconds / 60) === 1 ? 'Minuto' : 'Minutos'}`
+                  : `${phase2Seconds} Segundos`
                 }
               </div>
-              <div className="text-amber-300/80 text-sm">Restantes para a 2ª fase</div>
-              <button onClick={dismissPhaseTransition} className="mt-2 px-4 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-sm transition-colors">
+              <button onClick={dismissPhaseTransition} className="px-4 py-1.5 bg-amber-500/30 hover:bg-amber-500/40 text-amber-300 rounded-lg text-xs font-semibold transition-colors mt-2">
                 Continuar
               </button>
             </motion.div>

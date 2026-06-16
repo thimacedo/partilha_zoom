@@ -4,7 +4,7 @@ import { useTimerStore } from '@/store/timer-store'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Play, RotateCcw, Pause, Volume2, VolumeX, Sun, Moon, Plus, Minus, Settings2 } from 'lucide-react'
+import { Play, RotateCcw, Pause, Volume2, VolumeX, Sun, Moon, Plus, Minus, Settings2, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 
 const PRESETS = [
@@ -31,6 +31,7 @@ export function TimerSetup() {
   const isPaused = useTimerStore((s) => s.isPaused)
   const soundEnabled = useTimerStore((s) => s.soundEnabled)
   const darkMode = useTimerStore((s) => s.darkMode)
+  const overlayMode = useTimerStore((s) => s.overlayMode)
 
   const setPhase1Seconds = useTimerStore((s) => s.setPhase1Seconds)
   const setPhase2Seconds = useTimerStore((s) => s.setPhase2Seconds)
@@ -41,6 +42,7 @@ export function TimerSetup() {
   const resetTimer = useTimerStore((s) => s.resetTimer)
   const toggleSound = useTimerStore((s) => s.toggleSound)
   const toggleDarkMode = useTimerStore((s) => s.toggleDarkMode)
+  const toggleOverlay = useTimerStore((s) => s.toggleOverlay)
 
   const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -203,7 +205,22 @@ export function TimerSetup() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 justify-end">
+        <div className="flex items-center gap-2 justify-end flex-wrap">
+          <Button
+            onClick={toggleOverlay}
+            variant="outline"
+            size="sm"
+            className={`h-9 px-3 rounded-xl transition-all duration-200 ${
+              overlayMode
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold'
+                : 'border-border text-muted-foreground hover:bg-muted font-medium'
+            }`}
+            title={overlayMode ? 'Ocultar overlay para todos' : 'Exibir overlay para todos'}
+          >
+            {overlayMode ? <Eye className="h-4 w-4 mr-1.5 text-emerald-600 dark:text-emerald-400" /> : <EyeOff className="h-4 w-4 mr-1.5" />}
+            <span className="text-xs">Overlay SPH</span>
+          </Button>
+
           {/* Main Action Trigger */}
           {isIdle ? (
             <Button

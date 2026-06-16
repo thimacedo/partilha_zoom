@@ -6,10 +6,9 @@ import { TimerSetup } from '@/components/zoom-timer/TimerSetup'
 import { TimerDisplay } from '@/components/zoom-timer/TimerDisplay'
 import { PhaseTransitionAlert, TimeUpAlert } from '@/components/zoom-timer/PhaseAlert'
 import { SpeakerQueue } from '@/components/zoom-timer/SpeakerQueue'
-import { OverlayTimer, OverlayToggleButton } from '@/components/zoom-timer/OverlayTimer'
+import { OverlayTimer } from '@/components/zoom-timer/OverlayTimer'
 import { FullscreenTimer, FullscreenToggleButton } from '@/components/zoom-timer/FullscreenTimer'
 import { DarkModeSync } from '@/components/zoom-timer/DarkModeSync'
-import { SessionHistory } from '@/components/zoom-timer/SessionHistory'
 import { useTimerStore } from '@/store/timer-store'
 import { Timer, MonitorSmartphone, Keyboard } from 'lucide-react'
 import { useEffect } from 'react'
@@ -105,7 +104,6 @@ export default function Home() {
                 </>
               )}
               <FullscreenToggleButton />
-              <OverlayToggleButton />
             </div>
           </div>
         </header>
@@ -126,10 +124,9 @@ export default function Home() {
               <TimeUpAlert />
             </div>
 
-            {/* Speaker queue + history */}
+            {/* Speaker queue */}
             <div className="lg:col-span-1 space-y-4">
               <SpeakerQueue isInZoom={isInZoom} isHostOrCoHost={isHostOrCoHost} />
-              <SessionHistory />
             </div>
           </div>
         </main>

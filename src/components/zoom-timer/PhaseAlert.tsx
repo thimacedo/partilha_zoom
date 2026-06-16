@@ -17,53 +17,42 @@ export function PhaseTransitionAlert() {
   const dismissPhaseTransition = useTimerStore((s) => s.dismissPhaseTransition)
 
   const phase2Minutes = Math.floor(phase2Seconds / 60)
+  const phase2RemainingSeconds = phase2Seconds % 60
+
+  let timeText = ''
+  if (phase2Seconds >= 60) {
+    if (phase2RemainingSeconds === 0) {
+      timeText = `${phase2Minutes} ${phase2Minutes === 1 ? 'Minuto' : 'Minutos'}`
+    } else {
+      timeText = `${phase2Minutes} ${phase2Minutes === 1 ? 'Minuto' : 'Minutos'} e ${phase2RemainingSeconds} ${phase2RemainingSeconds === 1 ? 'Segundo' : 'Segundos'}`
+    }
+  } else {
+    timeText = `${phase2Seconds} ${phase2Seconds === 1 ? 'Segundo' : 'Segundos'}`
+  }
 
   return (
     <AnimatePresence>
       {showPhaseTransition && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: -20 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="w-full"
+          exit={{ opacity: 0, scale: 0.95, y: -15 }}
+          transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+          className="w-full text-center"
         >
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5 sm:p-6 shadow-lg">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                  <span className="text-sm font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                    Fim da 1ª Fase
-                  </span>
-                </div>
-                
-                <div className="text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 mb-2">
-                  {phase2Seconds >= 60 
-                    ? `${phase2Minutes} ${phase2Minutes === 1 ? 'minuto' : 'minutos'}`
-                    : `${phase2Seconds} segundos`
-                  }
-                </div>
-                
-                <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400 text-sm">
-                  <span>1ª Fase</span>
-                  <ArrowRight className="h-4 w-4" />
-                  <span className="font-bold">2ª Fase</span>
-                </div>
-                
-                <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-2">
-                  Restam {formatTimeCompact(phase2Seconds)} para a conclusão
-                </p>
-              </div>
-              
-              <Button
-                onClick={dismissPhaseTransition}
-                variant="ghost"
-                size="sm"
-                className="text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 -mt-1 -mr-1 h-7 w-7 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-300/60 dark:border-amber-700/50 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden flex flex-col items-center justify-center">
+            {/* Close button */}
+            <Button
+              onClick={dismissPhaseTransition}
+              variant="ghost"
+              size="sm"
+              className="absolute top-2.5 right-2.5 text-amber-600/70 hover:text-amber-700 hover:bg-amber-100/50 dark:text-amber-400/70 dark:hover:text-amber-300 dark:hover:bg-amber-900/30 h-7 w-7 p-0 rounded-lg"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            
+            <div className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight drop-shadow-sm">
+              {timeText}
             </div>
           </div>
         </motion.div>

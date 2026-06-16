@@ -202,22 +202,17 @@ export function OverlayTimer() {
                 className="overflow-hidden"
               >
                 <div className="bg-amber-500/20 border-t border-amber-400/30 px-3 py-2 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-amber-300 text-xs shrink-0">⚠</span>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-amber-200 text-[11px] font-semibold leading-tight">
-                        Fim da 1ª fase!
-                      </span>
-                      <span className="text-amber-300/80 text-[10px] leading-tight">
-                        Ainda restam {phase2TimeLabel} na 2ª fase
-                      </span>
-                    </div>
-                  </div>
+                  <span className="text-amber-300 text-xs font-bold pl-1">
+                    {phase2Seconds >= 60 
+                      ? `${Math.floor(phase2Seconds / 60)} ${Math.floor(phase2Seconds / 60) === 1 ? 'Minuto' : 'Minutos'}`
+                      : `${phase2Seconds} Segundos`
+                    }
+                  </span>
                   <button
                     onClick={dismissPhaseTransition}
-                    className="text-[10px] text-amber-300/80 hover:text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 px-2 py-1 rounded shrink-0 transition-colors"
+                    className="text-[9px] text-amber-300/90 hover:text-amber-200 bg-amber-500/30 hover:bg-amber-500/40 px-2 py-0.5 rounded shrink-0 transition-colors font-semibold"
                   >
-                    Continuar →
+                    OK
                   </button>
                 </div>
               </motion.div>
