@@ -1,7 +1,6 @@
 'use client'
 
 import { useTimerStore, TimerPhase } from '@/store/timer-store'
-import { Card } from '@/components/ui/card'
 import { useMemo } from 'react'
 
 function formatTime(totalSeconds: number): string {
@@ -20,127 +19,142 @@ function getPhaseLabel(phase: TimerPhase): string {
   }
 }
 
-function getPhaseColor(phase: TimerPhase, remainingSeconds: number): string {
-  if (phase === 'idle') return 'from-emerald-500/10 to-teal-500/10'
-  if (phase === 'timeUp') return 'from-red-500/10 to-rose-500/10'
-  if (phase === 'phaseTransition') return 'from-amber-500/10 to-orange-500/10'
-  
-  // Warning colors when time is running low
-  const totalForPhase = phase === 'phase1' 
-    ? useTimerStore.getState().phase1Minutes * 60 
-    : useTimerStore.getState().phase2Minutes * 60
-  
-  if (phase === 'phase1') {
-    return 'from-emerald-500/10 to-teal-500/10'
-  }
-  if (phase === 'phase2') {
-    if (remainingSeconds <= 30) return 'from-red-500/10 to-rose-500/10'
-    if (remainingSeconds <= 60) return 'from-amber-500/10 to-orange-500/10'
-    return 'from-amber-500/10 to-orange-500/10'
-  }
-  return 'from-emerald-500/10 to-teal-500/10'
-}
-
 function getTextColor(phase: TimerPhase, remainingSeconds: number): string {
-  if (phase === 'idle') return 'text-emerald-600'
-  if (phase === 'timeUp') return 'text-red-600'
-  if (phase === 'phaseTransition') return 'text-amber-600'
+  if (phase === 'idle') return 'text-emerald-600 dark:text-emerald-400'
+  if (phase === 'timeUp') return 'text-red-600 dark:text-red-400'
+  if (phase === 'phaseTransition') return 'text-amber-600 dark:text-amber-400'
   if (phase === 'phase1') {
-    if (remainingSeconds <= 30) return 'text-amber-600'
-    return 'text-emerald-600'
+    if (remainingSeconds <= 30) return 'text-amber-600 dark:text-amber-400'
+    return 'text-emerald-600 dark:text-emerald-400'
   }
   if (phase === 'phase2') {
-    if (remainingSeconds <= 30) return 'text-red-600'
-    if (remainingSeconds <= 60) return 'text-amber-600'
-    return 'text-amber-600'
+    if (remainingSeconds <= 30) return 'text-red-600 dark:text-red-400'
+    if (remainingSeconds <= 60) return 'text-amber-600 dark:text-amber-400'
+    return 'text-amber-600 dark:text-amber-400'
   }
-  return 'text-emerald-600'
+  return 'text-emerald-600 dark:text-emerald-400'
 }
 
-function getProgress(phase: TimerPhase, remainingSeconds: number): number {
-  if (phase === 'idle' || phase === 'timeUp') return 0
-  const totalForPhase = phase === 'phase1' 
-    ? useTimerStore.getState().phase1Minutes * 60 
-    : useTimerStore.getState().phase2Minutes * 60
-  if (totalForPhase === 0) return 0
-  return ((totalForPhase - remainingSeconds) / totalForPhase) * 100
+function getRingColor(phase: TimerPhase, remainingSeconds: number): string {
+  if (phase === 'phase1') {
+    if (remainingSeconds <= 30) return '#f59e0b' // amber-500
+    return '#10b981' // emerald-500
+  }
+  if (phase === 'phase2') {
+    if (remainingSeconds <= 30) return '#ef4444' // red-500
+    if (remainingSeconds <= 60) return '#f59e0b' // amber-500
+    return '#f59e0b' // amber-500
+  }
+  return '#10b981' // emerald-500
+}
+
+function getTrackColor(phase: TimerPhase): string {
+  if (phase === 'phase1') return 'rgba(16,185,129,0.15)'
+  if (phase === 'phase2') return 'rgba(245,158,11,0.15)'
+  return 'rgba(16,185,129,0.15)'
 }
 
 export function TimerDisplay() {
   const phase = useTimerStore((s) => s.phase)
   const remainingSeconds = useTimerStore((s) => s.remainingSeconds)
   const isPaused = useTimerStore((s) => s.isPaused)
-  const isRunning = useTimerStore((s) => s.isRunning)
-  const phase1Minutes = useTimerStore((s) => s.phase1Minutes)
-  const phase2Minutes = useTimerStore((s) => s.phase2Minutes)
+  const phase1Seconds = useTimerStore((s) => s.phase1Seconds)
+  const phase2Seconds = useTimerStore((s) => s.phase2Seconds)
 
   const timeDisplay = formatTime(remainingSeconds)
   const phaseLabel = getPhaseLabel(phase)
-  const bgGradient = getPhaseColor(phase, remainingSeconds)
   const textColor = getTextColor(phase, remainingSeconds)
-  const progress = getProgress(phase, remainingSeconds)
 
-  const progressColor = useMemo(() => {
-    if (phase === 'phase1') return 'bg-emerald-500'
-    if (phase === 'phase2') {
-      if (remainingSeconds <= 30) return 'bg-red-500'
-      if (remainingSeconds <= 60) return 'bg-amber-500'
-      return 'bg-amber-500'
-    }
-    return 'bg-emerald-500'
-  }, [phase, remainingSeconds])
+  const totalForPhase = phase === 'phase1' ? phase1Seconds : phase2Seconds
+  const progress = totalForPhase > 0 && (phase === 'phase1' || phase === 'phase2')
+    ? ((totalForPhase - remainingSeconds) / totalForPhase) * 100
+    : 0
 
-  const totalSeconds = (phase === 'phase1' ? phase1Minutes : phase2Minutes) * 60
+  const ringColor = getRingColor(phase, remainingSeconds)
+  const trackColor = getTrackColor(phase)
+
+  // SVG circular ring calculations
+  const radius = 88
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference - (progress / 100) * circumference
+
+  const showRing = phase === 'phase1' || phase === 'phase2'
 
   return (
-    <Card className={`w-full overflow-hidden border-border/50 shadow-sm bg-gradient-to-br ${bgGradient} transition-colors duration-500`}>
-      <div className="p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center gap-2 sm:gap-3">
-        {/* Phase label */}
-        <div className="flex items-center gap-2">
-          <span className={`text-sm font-medium uppercase tracking-wider ${textColor} transition-colors duration-500`}>
-            {phaseLabel}
-          </span>
-          {isPaused && (
-            <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-              PAUSADO
-            </span>
-          )}
-        </div>
-
-        {/* Main time display */}
-        <div className={`text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tabular-nums tracking-tight ${textColor} transition-colors duration-500`}>
-          {timeDisplay}
-        </div>
-
-        {/* Progress bar */}
-        {(phase === 'phase1' || phase === 'phase2') && totalSeconds > 0 && (
-          <div className="w-full max-w-md mt-2">
-            <div className="h-2 bg-black/10 rounded-full overflow-hidden">
-              <div
-                className={`h-full ${progressColor} rounded-full transition-all duration-1000 ease-linear`}
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-              <span>0:00</span>
-              <span>{phase === 'phase1' ? `${phase1Minutes}:00` : `${phase2Minutes}:00`}</span>
-            </div>
-          </div>
+    <div className="w-full flex flex-col items-center justify-center py-6 sm:py-8 md:py-10">
+      {/* Circular SVG timer ring */}
+      <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80">
+        {showRing && (
+          <svg
+            className="absolute inset-0 -rotate-90"
+            viewBox="0 0 200 200"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {/* Track */}
+            <circle
+              cx="100"
+              cy="100"
+              r={radius}
+              fill="none"
+              stroke={trackColor}
+              strokeWidth="6"
+            />
+            {/* Progress */}
+            <circle
+              cx="100"
+              cy="100"
+              r={radius}
+              fill="none"
+              stroke={ringColor}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              className="transition-all duration-1000 ease-linear"
+            />
+          </svg>
         )}
 
-        {/* Phase indicator dots */}
-        <div className="flex items-center gap-3 mt-2">
-          <div className={`h-2.5 w-2.5 rounded-full transition-colors duration-300 ${
-            phase === 'phase1' ? 'bg-emerald-500 ring-2 ring-emerald-500/30' : 
-            phase === 'phaseTransition' || phase === 'phase2' || phase === 'timeUp' ? 'bg-emerald-500' : 'bg-gray-300'
-          }`} />
-          <div className="h-0.5 w-8 bg-border" />
-          <div className={`h-2.5 w-2.5 rounded-full transition-colors duration-300 ${
-            phase === 'phase2' ? 'bg-amber-500 ring-2 ring-amber-500/30' : 
-            phase === 'timeUp' ? 'bg-amber-500' : 'bg-gray-300'
-          }`} />
+        {/* Center content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 sm:gap-1.5">
+          {/* Phase label */}
+          <div className="flex items-center gap-2">
+            <span className={`text-xs sm:text-sm font-medium uppercase tracking-wider ${textColor} transition-colors duration-500`}>
+              {phaseLabel}
+            </span>
+            {isPaused && (
+              <span className="text-[10px] sm:text-xs font-medium bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+                PAUSADO
+              </span>
+            )}
+          </div>
+
+          {/* Main time display */}
+          <div className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tabular-nums tracking-tight ${textColor} transition-colors duration-500`}>
+            {phase === 'idle' ? '--:--' : timeDisplay}
+          </div>
+
+          {/* Phase indicator dots */}
+          <div className="flex items-center gap-2 mt-1">
+            <div className={`h-2 w-2 rounded-full transition-colors duration-300 ${
+              phase === 'phase1' ? 'bg-emerald-500 ring-2 ring-emerald-500/30' : 
+              ['phaseTransition', 'phase2', 'timeUp'].includes(phase) ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
+            }`} />
+            <div className="h-0.5 w-6 bg-border" />
+            <div className={`h-2 w-2 rounded-full transition-colors duration-300 ${
+              phase === 'phase2' ? 'bg-amber-500 ring-2 ring-amber-500/30' : 
+              phase === 'timeUp' ? 'bg-amber-500' : 'bg-gray-300 dark:bg-gray-600'
+            }`} />
+          </div>
+
+          {/* Total time info */}
+          {(phase === 'phase1' || phase === 'phase2') && totalForPhase > 0 && (
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+              {formatTime(totalForPhase)} total desta fase
+            </div>
+          )}
         </div>
       </div>
-    </Card>
+    </div>
   )
 }

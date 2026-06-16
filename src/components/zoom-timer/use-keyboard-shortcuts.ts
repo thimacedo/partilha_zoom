@@ -13,7 +13,7 @@ export function useKeyboardShortcuts() {
       }
 
       const store = useTimerStore.getState()
-      const { phase, isRunning, isPaused, overlayMode, soundEnabled } = store
+      const { phase, isRunning, isPaused } = store
 
       switch (e.key) {
         case 'Enter':
@@ -54,6 +54,11 @@ export function useKeyboardShortcuts() {
         case 'M':
           e.preventDefault()
           store.toggleSound()
+          break
+        case 'd':
+        case 'D':
+          e.preventDefault()
+          store.toggleDarkMode()
           break
         case 'n':
         case 'N':
