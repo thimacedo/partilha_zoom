@@ -19,10 +19,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useZoomSdk } from '@/hooks/use-zoom-sdk'
+import { Share2, Users } from 'lucide-react'
 
 export default function Home() {
   useTimer()
   useKeyboardShortcuts()
+  const { isInZoom, shareApp, sendInvitation } = useZoomSdk()
 
   // Sync dark mode class on <html>
   const darkMode = useTimerStore((s) => s.darkMode)
@@ -81,6 +84,26 @@ export default function Home() {
                 <MonitorSmartphone className="h-3 w-3" />
                 PC · Android · iOS
               </div>
+              {isInZoom && (
+                <>
+                  <button
+                    onClick={shareApp}
+                    className="flex items-center gap-1 text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded hover:bg-blue-700 transition-colors shadow-sm font-medium cursor-pointer"
+                    title="Compartilhar tela do cronômetro na reunião"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    <span>Compartilhar</span>
+                  </button>
+                  <button
+                    onClick={sendInvitation}
+                    className="flex items-center gap-1 text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded hover:text-foreground hover:bg-muted/80 transition-colors font-medium cursor-pointer"
+                    title="Convidar participantes a abrir o app"
+                  >
+                    <Users className="h-3 w-3" />
+                    <span>Convidar</span>
+                  </button>
+                </>
+              )}
               <FullscreenToggleButton />
               <OverlayToggleButton />
             </div>
