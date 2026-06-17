@@ -10,10 +10,6 @@ import { useState } from 'react'
 const PRESETS = [
   { label: '3+2 min', p1: 180, p2: 120 },
   { label: '4+1 min', p1: 240, p2: 60 },
-  { label: '5+5 min', p1: 300, p2: 300 },
-  { label: '7+3 min', p1: 420, p2: 180 },
-  { label: '10+5 min', p1: 600, p2: 300 },
-  { label: '2+1 min', p1: 120, p2: 60 },
 ]
 
 function formatTotal(seconds: number): string {
@@ -103,13 +99,6 @@ export function TimerSetup() {
             ? 'border-emerald-500/10 bg-emerald-500/[0.01]' 
             : 'border-border/40 bg-muted/10 opacity-70'
         }`}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              1ª Fase (Principal)
-            </span>
-            <span className="text-[10px] text-muted-foreground font-mono">{p1Min}m</span>
-          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -147,13 +136,6 @@ export function TimerSetup() {
             ? 'border-amber-500/10 bg-amber-500/[0.01]' 
             : 'border-border/40 bg-muted/10 opacity-70'
         }`}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              2ª Fase (Acordo/Tolerância)
-            </span>
-            <span className="text-[10px] text-muted-foreground font-mono">{p2Min}m</span>
-          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

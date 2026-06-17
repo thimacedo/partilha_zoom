@@ -11,9 +11,9 @@ function formatTime(totalSeconds: number): string {
 function getPhaseLabel(phase: TimerPhase): string {
   switch (phase) {
     case 'idle': return 'Pronto'
-    case 'phase1': return '1ª Fase'
+    case 'phase1': return ''
     case 'phaseTransition': return 'Transição'
-    case 'phase2': return '2ª Fase'
+    case 'phase2': return ''
     case 'timeUp': return 'Tempo Esgotado'
   }
 }
@@ -190,19 +190,19 @@ export function TimerDisplay() {
           {/* Phase info */}
           {phase === 'idle' && (
             <div className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 text-center font-medium">
-              Fase 1: {formatTime(phase1Seconds)} · Fase 2: {formatTime(phase2Seconds)}
+              {formatTime(phase1Seconds)} + {formatTime(phase2Seconds)} (total)
             </div>
           )}
           {phase === 'phase1' && (
             <div className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 text-center">
-              <span>Fase 1 · Restam {formatTime(remainingSeconds)}</span>
+              <span>Restam {formatTime(remainingSeconds)}</span>
               <span className="mx-1">·</span>
               <span className="font-semibold text-foreground">total {formatTime(totalRemainingSeconds)}</span>
             </div>
           )}
           {phase === 'phase2' && (
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 text-center font-medium">
-              Fase final · {formatTime(remainingSeconds)} restantes
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 text-center font-medium text-amber-600 dark:text-amber-400">
+              {formatTime(remainingSeconds)} restantes
             </div>
           )}
           {phase === 'timeUp' && (

@@ -13,9 +13,9 @@ function formatTime(totalSeconds: number): string {
 function getPhaseLabel(phase: TimerPhase): string {
   switch (phase) {
     case 'idle': return ''
-    case 'phase1': return '1ª Fase'
+    case 'phase1': return ''
     case 'phaseTransition': return 'Transição'
-    case 'phase2': return '2ª Fase'
+    case 'phase2': return ''
     case 'timeUp': return 'Tempo Esgotado'
   }
 }
@@ -161,11 +161,15 @@ export function FullscreenTimer() {
             </div>
           </div>
 
-          {/* Phase 2 info during Phase 1 */}
-          {phase === 'phase1' && (
+          {/* Phase info sub-row */}
+          {(phase === 'phase1' || phase === 'phase2') && (
             <div className="text-center mt-1">
               <div className="text-white/30 text-sm">
-                Fase 1 · Restam {formatTime(remainingSeconds)} · total {formatTime(totalRemainingSeconds)}
+                {phase === 'phase1' ? (
+                  <>Restam {formatTime(remainingSeconds)} · total {formatTime(totalRemainingSeconds)}</>
+                ) : (
+                  <>Tempo final</>
+                )}
               </div>
             </div>
           )}

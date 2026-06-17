@@ -144,17 +144,12 @@ export function OverlayTimer() {
               {/* Phase info sub-row */}
               <div className="flex items-center gap-1.5 text-[9px] leading-none">
                 {phase === 'phase1' && (
-                  <>
-                    {/* Show that phase 2 still exists */}
-                    <span className="text-white/40">+{phase2TimeLabel} na 2ª fase</span>
-                    <span className="text-white/20">·</span>
-                    <span className="text-white/40">
-                      total {formatTimeCompact(totalRemainingSeconds)}
-                    </span>
-                  </>
+                  <span className="text-white/40">
+                    restam {formatTimeCompact(totalRemainingSeconds)} no total
+                  </span>
                 )}
                 {phase === 'phase2' && (
-                  <span className="text-white/40">fase final</span>
+                  <span className="text-white/40">tempo final</span>
                 )}
                 {phase === 'idle' && (
                   <span className="text-white/30">{formatTimeCompact(totalRemainingSeconds)} total</span>
