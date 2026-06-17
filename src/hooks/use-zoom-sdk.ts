@@ -43,7 +43,6 @@ export function useZoomSdk() {
             try {
               const userContext = await zoomSdk.getUserContext()
               // 1. Draw self as the background layer (zIndex 1)
-              // This is what allows others to see your camera + the app
               await zoomSdk.drawParticipant({
                 participantUUID: userContext.participantUUID,
                 x: 0,
