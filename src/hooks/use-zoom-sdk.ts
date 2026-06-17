@@ -9,8 +9,7 @@ export function useZoomSdk() {
 
   useEffect(() => {
     let zoomSdkInstance: any = null
-    let feedbackHandler: ((event: any) => void) | null = null
-
+    
     // Dynamic import to prevent server-side rendering (SSR) issues
     import('@zoom/appssdk')
       .then(async (module) => {
@@ -19,6 +18,7 @@ export function useZoomSdk() {
         try {
           const configResponse = await zoomSdk.config({
             capabilities: [
+              'camera', // Critical for immersive mode
               'shareApp',
               'getMeetingContext',
               'getUserContext',
@@ -30,39 +30,45 @@ export function useZoomSdk() {
               'setVideoOverlay',
               'onMeetingConfigChanged',
               'drawParticipant',
-              'drawWebView'
+              'drawWebView',
+              'postMessage',
+              'onMessage'
             ],
             version: '0.16'
           })
-          console.log('Zoom Apps SDK initialized successfully:', configResponse)
+          
+          console.log('Zoom SDK Config:', configResponse)
           setIsInZoom(true)
           setRunningContext(configResponse.runningContext)
 
-          // If we are in the camera context, setup the layers
+          // 1. If in Camera Context, setup layers and listen for state updates from Sidebar
           if (configResponse.runningContext === 'inCamera') {
+            console.log('Setting up Camera Layers...')
             try {
               const userContext = await zoomSdk.getUserContext()
-              // 1. Draw self as the background layer (zIndex 1)
+              
+              // Draw self (zIndex 1)
               await zoomSdk.drawParticipant({
                 participantUUID: userContext.participantUUID,
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                zIndex: 1
+                x: 0, y: 0, width: 100, height: 100, zIndex: 1
               })
-              // 2. Draw the app webview on top (zIndex 2)
+              
+              // Draw app (zIndex 2)
               await zoomSdk.drawWebView({
                 webviewId: 'camera',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                zIndex: 2
+                x: 0, y: 0, width: 100, height: 100, zIndex: 2
               })
-            } catch (layerErr) {
-              console.error('Failed to setup camera layers:', layerErr)
+            } catch (err) {
+              console.error('Layer setup failed:', err)
             }
+
+            // Listen for timer updates from the Sidebar instance
+            zoomSdk.onMessage((event: any) => {
+              const { type, payload } = event.payload
+              if (type === 'SYNC_TIMER_STATE') {
+                useTimerStore.setState(payload)
+              }
+            })
           }
 
           // Check user role
@@ -74,85 +80,75 @@ export function useZoomSdk() {
             console.error('Failed to get user context:', e)
           }
 
-          // Register event listener for raised hands
-          feedbackHandler = async (event: any) => {
-            console.log('Feedback reaction event received:', event)
-            if (event.feedback === 'raiseHand') {
-              try {
-                const participantsResp = await zoomSdk.getMeetingParticipants()
-                const participant = participantsResp.participants.find(
-                  (p: any) => p.participantUUID === event.participantUUID
-                )
-                if (participant) {
-                  const name = participant.screenName
-                  const store = useTimerStore.getState()
-                  
-                  // Check if speaker is already in the queue (case-insensitive)
-                  const alreadyInQueue = store.speakers.some(
-                    (s) => s.name.trim().toLowerCase() === name.trim().toLowerCase()
+          // Register event listener for raised hands (Sidebar only)
+          if (configResponse.runningContext !== 'inCamera') {
+            zoomSdk.addEventListener('onFeedbackReaction', async (event: any) => {
+              if (event.feedback === 'raiseHand') {
+                try {
+                  const participantsResp = await zoomSdk.getMeetingParticipants()
+                  const participant = participantsResp.participants.find(
+                    (p: any) => p.participantUUID === event.participantUUID
                   )
-                  if (!alreadyInQueue) {
-                    store.addSpeaker(name)
-                    console.log(`Automatically added ${name} to queue via Zoom hand raise.`)
+                  if (participant) {
+                    useTimerStore.getState().addSpeaker(participant.screenName)
                   }
+                } catch (err) {
+                  console.error('Hand raise sync failed:', err)
                 }
-              } catch (err) {
-                console.error('Failed to retrieve participant name for hand raise:', err)
               }
-            }
+            })
           }
-
-          zoomSdk.addEventListener('onFeedbackReaction', feedbackHandler)
         } catch (err: any) {
-          console.log('Not running inside Zoom client:', err.message)
+          console.log('Zoom Context:', err.message)
           setIsInZoom(false)
           setSdkError(err.message)
         }
       })
-      .catch((err) => {
-        console.error('Failed to load @zoom/appssdk:', err)
-      })
 
-    return () => {
-      if (zoomSdkInstance && feedbackHandler) {
-        try {
-          zoomSdkInstance.removeEventListener('onFeedbackReaction', feedbackHandler)
-          console.log('Cleaned up onFeedbackReaction listener')
-        } catch (e) {
-          console.error('Failed to remove event listener:', e)
-        }
-      }
-    }
   }, [])
 
+  // 2. Broadcast state changes to Camera instance (if timer is running)
+  useEffect(() => {
+    const unsubscribe = useTimerStore.subscribe((state) => {
+      if (isInZoom && runningContext !== 'inCamera' && state.isRunning) {
+        import('@zoom/appssdk').then(({ default: zoomSdk }) => {
+          zoomSdk.postMessage({
+            type: 'SYNC_TIMER_STATE',
+            payload: {
+              phase: state.phase,
+              remainingSeconds: state.remainingSeconds,
+              isRunning: state.isRunning,
+              isPaused: state.isPaused,
+              phase1Seconds: state.phase1Seconds,
+              phase2Seconds: state.phase2Seconds,
+              currentSpeakerIndex: state.currentSpeakerIndex,
+              speakers: state.speakers
+            }
+          }).catch(() => {}) // Ignore errors if camera view not open
+        })
+      }
+    })
+    return () => unsubscribe()
+  }, [isInZoom, runningContext])
+
   const shareApp = async () => {
-    try {
-      const { default: zoomSdk } = await import('@zoom/appssdk')
-      await zoomSdk.shareApp()
-      console.log('App shared successfully to meeting stage')
-    } catch (err: any) {
-      console.error('Failed to share app:', err.message)
-    }
+    const { default: zoomSdk } = await import('@zoom/appssdk')
+    await zoomSdk.shareApp()
   }
 
   const sendInvitation = async () => {
-    try {
-      const { default: zoomSdk } = await import('@zoom/appssdk')
-      await zoomSdk.sendAppInvitation()
-      console.log('App invitation sent')
-    } catch (err: any) {
-      console.error('Failed to send app invitation:', err.message)
-    }
+    const { default: zoomSdk } = await import('@zoom/appssdk')
+    await zoomSdk.sendAppInvitation()
   }
 
   const setCameraMode = async () => {
     try {
       const { default: zoomSdk } = await import('@zoom/appssdk')
-      // Switch the app instance to camera view
+      // Switch view
       await zoomSdk.runRenderingContext({ view: 'camera' })
-      console.log('Switched to Camera Rendering Context')
+      console.log('Camera Mode Requested')
     } catch (err: any) {
-      console.error('Failed to switch to camera mode:', err.message)
+      console.error('Camera Mode Error:', err.message)
     }
   }
 
