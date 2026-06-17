@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Users, Plus, X, ChevronUp, ChevronDown, SkipForward, Trash2, Check, HelpCircle } from 'lucide-react'
+import { Users, Plus, X, ChevronUp, ChevronDown, SkipForward, Trash2, Check, HelpCircle, MessageSquare } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useZoomSdk } from '@/hooks/use-zoom-sdk'
 
 interface SpeakerQueueProps {
   isInZoom?: boolean
@@ -16,6 +17,7 @@ interface SpeakerQueueProps {
 }
 
 export function SpeakerQueue({ isInZoom = false, isHostOrCoHost = false }: SpeakerQueueProps) {
+  const { sendQueueToChat } = useZoomSdk()
   const speakers = useTimerStore((s) => s.speakers)
   const currentSpeakerIndex = useTimerStore((s) => s.currentSpeakerIndex)
   const addSpeaker = useTimerStore((s) => s.addSpeaker)
@@ -77,17 +79,31 @@ export function SpeakerQueue({ isInZoom = false, isHostOrCoHost = false }: Speak
               </Badge>
             )}
           </CardTitle>
-          {speakers.length > 0 && (
-            <Button
-              onClick={clearSpeakers}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-destructive h-7 px-2 rounded-lg text-xs"
-            >
-              <Trash2 className="h-3 w-3 mr-1" />
-              Limpar
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {isInZoom && speakers.length > 0 && (
+              <Button
+                onClick={() => sendQueueToChat(speakers)}
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-blue-500 h-7 px-2 rounded-lg text-[10px] font-medium transition-colors"
+                title="Enviar ordem no Chat do Zoom"
+              >
+                <MessageSquare className="h-3 w-3 mr-1" />
+                Chat
+              </Button>
+            )}
+            {speakers.length > 0 && (
+              <Button
+                onClick={clearSpeakers}
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-destructive h-7 px-2 rounded-lg text-xs transition-colors"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Limpar
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Zoom Sync Status Banner */}

@@ -27,13 +27,14 @@ export function useZoomSdk() {
               'getMeetingParticipants',
               'onFeedbackReaction',
               'runRenderingContext',
-              'closeRenderingContext', // Critical for stopping video mode
+              'closeRenderingContext',
               'setVideoOverlay',
               'onMeetingConfigChanged',
               'drawParticipant',
               'drawWebView',
               'postMessage',
-              'onMessage'
+              'onMessage',
+              'sendChat' // Added capability for chat
             ],
             version: '0.16'
           })
@@ -162,5 +163,31 @@ export function useZoomSdk() {
     }
   }
 
-  return { isInZoom, sdkError, isHostOrCoHost, runningContext, shareApp, sendInvitation, toggleCameraMode }
+  const sendQueueToChat = async (speakers: any[]) => {
+    try {
+      const { default: zoomSdk } = await import('@zoom/appssdk')
+      if (speakers.length === 0) return
+
+      const message = `📋 Ordem das Partilhas:\n` + 
+        speakers.map((s, i) => `${i + 1}. ${s.name}`).join('\n')
+
+      await zoomSdk.sendChat({
+        message: message
+      })
+      console.log('Queue sent to chat')
+    } catch (err: any) {
+      console.error('Failed to send chat:', err.message)
+    }
+  }
+
+  return { 
+    isInZoom, 
+    sdkError, 
+    isHostOrCoHost, 
+    runningContext, 
+    shareApp, 
+    sendInvitation, 
+    toggleCameraMode, 
+    sendQueueToChat 
+  }
 }
