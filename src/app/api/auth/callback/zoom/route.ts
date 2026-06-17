@@ -15,9 +15,14 @@ export async function GET(request: Request) {
 
   try {
     // 1. Exchange code for tokens
-    const clientId = process.env.ZOOM_APP_CLIENT_ID;
-    const clientSecret = process.env.ZOOM_APP_CLIENT_SECRET;
-    const redirectUri = process.env.ZOOM_APP_REDIRECT_URI;
+    const clientId = (process.env.ZOOM_APP_CLIENT_ID || '').trim();
+    const clientSecret = (process.env.ZOOM_APP_CLIENT_SECRET || '').trim();
+    const redirectUri = (process.env.ZOOM_APP_REDIRECT_URI || '').trim();
+
+    if (!clientId || !clientSecret) {
+      console.error('Missing Zoom credentials in environment variables');
+      return NextResponse.json({ message: 'Server configuration error' }, { status: 500 });
+    }
 
     const authHeader = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
