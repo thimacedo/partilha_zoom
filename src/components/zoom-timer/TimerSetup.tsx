@@ -92,9 +92,9 @@ export function TimerSetup() {
       )}
 
       {/* Main Configurations Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
         {/* Phase 1 Input Card */}
-        <div className={`flex flex-col gap-1.5 p-3 rounded-xl border transition-all ${
+        <div className={`flex-1 w-full flex flex-col gap-1.5 p-3 rounded-xl border transition-all ${
           isIdle 
             ? 'border-emerald-500/10 bg-emerald-500/[0.01]' 
             : 'border-border/40 bg-muted/10 opacity-70'
@@ -130,8 +130,13 @@ export function TimerSetup() {
           </div>
         </div>
 
+        {/* Visual Separator */}
+        <div className="flex items-center justify-center">
+          <span className="text-2xl font-light text-muted-foreground/40 sm:mb-0 mb-1">+</span>
+        </div>
+
         {/* Phase 2 Input Card */}
-        <div className={`flex flex-col gap-1.5 p-3 rounded-xl border transition-all ${
+        <div className={`flex-1 w-full flex flex-col gap-1.5 p-3 rounded-xl border transition-all ${
           isIdle 
             ? 'border-amber-500/10 bg-amber-500/[0.01]' 
             : 'border-border/40 bg-muted/10 opacity-70'
