@@ -17,7 +17,19 @@ export async function GET(request: Request) {
     // 1. Exchange code for tokens
     const clientId = (process.env.ZOOM_APP_CLIENT_ID || '').trim();
     const clientSecret = (process.env.ZOOM_APP_CLIENT_SECRET || '').trim();
-    const redirectUri = (process.env.ZOOM_APP_REDIRECT_URI || '').trim();
+    
+    // Construct redirect URI dynamically if not set in ENV, but fallback to known pattern
+    const url = new URL(request.url);
+    const fallbackRedirectUri = `${url.origin}/api/auth/callback/zoom`;
+    const envRedirectUri = (process.env.ZOOM_APP_REDIRECT_URI || '').trim();
+    const redirectUri = envRedirectUri || fallbackRedirectUri;
+
+    // DIAGNOSTIC LOGS (Check these in Vercel Dashboard -> Logs)
+    console.log('--- Zoom OAuth Debug ---');
+    console.log('Detected ClientID (start):', clientId.substring(0, 4) + '...');
+    console.log('Final RedirectURI used:', redirectUri);
+    console.log('Using ENV RedirectURI?', !!envRedirectUri);
+    console.log('------------------------');
 
     if (!clientId || !clientSecret) {
       console.error('Missing Zoom credentials in environment variables');
@@ -35,7 +47,7 @@ export async function GET(request: Request) {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: redirectUri || '',
+        redirect_uri: redirectUri,
       }),
     });
 
