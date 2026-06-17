@@ -18,7 +18,7 @@ export function useZoomSdk() {
         try {
           const configResponse = await zoomSdk.config({
             capabilities: [
-              'camera', // Critical for immersive mode
+              'camera',
               'shareApp',
               'getMeetingContext',
               'getUserContext',
@@ -27,6 +27,7 @@ export function useZoomSdk() {
               'getMeetingParticipants',
               'onFeedbackReaction',
               'runRenderingContext',
+              'closeRenderingContext', // Critical for stopping video mode
               'setVideoOverlay',
               'onMeetingConfigChanged',
               'drawParticipant',
@@ -141,16 +142,25 @@ export function useZoomSdk() {
     await zoomSdk.sendAppInvitation()
   }
 
-  const setCameraMode = async () => {
+  const toggleCameraMode = async () => {
     try {
       const { default: zoomSdk } = await import('@zoom/appssdk')
-      // Switch view
-      await zoomSdk.runRenderingContext({ view: 'camera' })
-      console.log('Camera Mode Requested')
+      
+      if (runningContext === 'inCamera') {
+        // If already in camera, close it
+        await zoomSdk.closeRenderingContext()
+        setRunningContext('inMeeting')
+        console.log('Camera Mode Closed')
+      } else {
+        // Otherwise, open it
+        await zoomSdk.runRenderingContext({ view: 'camera' })
+        setRunningContext('inCamera')
+        console.log('Camera Mode Requested')
+      }
     } catch (err: any) {
-      console.error('Camera Mode Error:', err.message)
+      console.error('Camera Mode Toggle Error:', err.message)
     }
   }
 
-  return { isInZoom, sdkError, isHostOrCoHost, runningContext, shareApp, sendInvitation, setCameraMode }
+  return { isInZoom, sdkError, isHostOrCoHost, runningContext, shareApp, sendInvitation, toggleCameraMode }
 }

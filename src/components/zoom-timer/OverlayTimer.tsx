@@ -238,7 +238,7 @@ export function OverlayTimer({ isCameraContext = false }: { isCameraContext?: bo
 }
 
 export function OverlayToggleButton() {
-  const { isInZoom, setCameraMode, runningContext } = useZoomSdk()
+  const { isInZoom, toggleCameraMode, runningContext } = useZoomSdk()
   const overlayMode = useTimerStore((s) => s.overlayMode)
   const toggleOverlay = useTimerStore((s) => s.toggleOverlay)
   const isRunning = useTimerStore((s) => s.isRunning)
@@ -264,17 +264,16 @@ export function OverlayToggleButton() {
 
       {isInZoom && (
         <button
-          onClick={setCameraMode}
-          disabled={isCameraActive}
+          onClick={toggleCameraMode}
           className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${
             isCameraActive
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+              ? 'bg-blue-600 text-white shadow-sm'
               : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
           }`}
-          title="Colocar timer sobre o seu vídeo para todos verem"
+          title={isCameraActive ? "Remover overlay do vídeo" : "Colocar timer sobre o seu vídeo para todos verem"}
         >
           <Video className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{isCameraActive ? 'Na Câmera' : 'Vídeo'}</span>
+          <span className="hidden sm:inline">{isCameraActive ? 'Sair Vídeo' : 'Vídeo'}</span>
         </button>
       )}
     </div>
