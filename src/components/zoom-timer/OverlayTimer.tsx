@@ -2,7 +2,8 @@
 
 import { useTimerStore, TimerPhase } from '@/store/timer-store'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Volume2, VolumeX, Eye, EyeOff } from 'lucide-react'
+import { Volume2, VolumeX, Eye, EyeOff, Video } from 'lucide-react'
+import { useZoomSdk } from '@/hooks/use-zoom-sdk'
 
 function formatTimeCompact(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60)
@@ -38,7 +39,7 @@ function getCompactBg(phase: TimerPhase, totalRemaining: number, phase2Seconds: 
   return 'bg-gray-900/95'
 }
 
-export function OverlayTimer() {
+export function OverlayTimer({ isCameraContext = false }: { isCameraContext?: boolean }) {
   const overlayVisible = useTimerStore((s) => s.overlayMode)
   const toggleOverlay = useTimerStore((s) => s.toggleOverlay)
   const phase = useTimerStore((s) => s.phase)
@@ -74,13 +75,9 @@ export function OverlayTimer() {
   const textColor = getCompactTextColor(phase, totalRemainingSeconds, phase2Seconds)
   const bgColor = getCompactBg(phase, totalRemainingSeconds, phase2Seconds)
 
-  // Auto-show overlay when timer is running (natural Zoom behavior)
-  const shouldShowOverlay = overlayVisible || isRunning || phase === 'timeUp'
-
-  // Remaining time in phase 2 (shown during phase 1 so speaker knows what's ahead)
-  const phase2TimeLabel = phase2Seconds >= 60
-    ? `${Math.floor(phase2Seconds / 60)}min`
-    : `${phase2Seconds}s`
+  // Auto-show overlay when timer is running
+  // In Camera Context, we always want it visible
+  const shouldShowOverlay = isCameraContext || overlayVisible || isRunning || phase === 'timeUp'
 
   if (!shouldShowOverlay) return null
 
@@ -90,7 +87,7 @@ export function OverlayTimer() {
         initial={{ opacity: 0, y: -20, x: 20 }}
         animate={{ opacity: 1, y: 0, x: 0 }}
         exit={{ opacity: 0, y: -20, x: 20 }}
-        className="fixed top-3 right-3 z-50"
+        className={isCameraContext ? "relative" : "fixed top-3 right-3 z-50"}
       >
         <div className={`${bgColor} backdrop-blur-md rounded-xl shadow-2xl border border-white/10 overflow-hidden transition-colors duration-500`}>
           {/* Main overlay row */}
@@ -168,22 +165,24 @@ export function OverlayTimer() {
             )}
 
             {/* Controls */}
-            <div className="flex items-center gap-0.5 pl-2 border-l border-white/20 shrink-0">
-              <button
-                onClick={toggleSound}
-                className="p-1.5 rounded hover:bg-white/10 transition-colors"
-                title={soundEnabled ? 'Desativar som' : 'Ativar som'}
-              >
-                {soundEnabled ? <Volume2 className="h-3 w-3 text-white/70" /> : <VolumeX className="h-3 w-3 text-white/40" />}
-              </button>
-              <button
-                onClick={toggleOverlay}
-                className="p-1.5 rounded hover:bg-white/10 transition-colors"
-                title={overlayVisible ? 'Ocultar overlay' : 'Mostrar overlay'}
-              >
-                {overlayVisible ? <Eye className="h-3 w-3 text-white/70" /> : <EyeOff className="h-3 w-3 text-white/40" />}
-              </button>
-            </div>
+            {!isCameraContext && (
+              <div className="flex items-center gap-0.5 pl-2 border-l border-white/20 shrink-0">
+                <button
+                  onClick={toggleSound}
+                  className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                  title={soundEnabled ? 'Desativar som' : 'Ativar som'}
+                >
+                  {soundEnabled ? <Volume2 className="h-3 w-3 text-white/70" /> : <VolumeX className="h-3 w-3 text-white/40" />}
+                </button>
+                <button
+                  onClick={toggleOverlay}
+                  className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                  title={overlayVisible ? 'Ocultar overlay' : 'Mostrar overlay'}
+                >
+                  {overlayVisible ? <Eye className="h-3 w-3 text-white/70" /> : <EyeOff className="h-3 w-3 text-white/40" />}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Phase transition message in overlay */}
@@ -239,25 +238,45 @@ export function OverlayTimer() {
 }
 
 export function OverlayToggleButton() {
+  const { isInZoom, setCameraMode, runningContext } = useZoomSdk()
   const overlayMode = useTimerStore((s) => s.overlayMode)
   const toggleOverlay = useTimerStore((s) => s.toggleOverlay)
   const isRunning = useTimerStore((s) => s.isRunning)
   const phase = useTimerStore((s) => s.phase)
 
   const isActive = overlayMode || isRunning || phase === 'timeUp'
+  const isCameraActive = runningContext === 'inCamera'
 
   return (
-    <button
-      onClick={toggleOverlay}
-      className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${
-        isActive
-          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-          : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
-      }`}
-      title={isActive ? 'Ocultar timer na tela' : 'Mostrar timer na tela (SPH)'}
-    >
-      {isActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-      <span className="hidden sm:inline">{isActive ? 'Visível' : 'SPH'}</span>
-    </button>
+    <div className="flex items-center gap-1">
+      <button
+        onClick={toggleOverlay}
+        className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${
+          isActive
+            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+            : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
+        }`}
+        title={isActive ? 'Ocultar timer na tela' : 'Mostrar timer na tela (SPH)'}
+      >
+        {isActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+        <span className="hidden sm:inline">{isActive ? 'Visível' : 'SPH'}</span>
+      </button>
+
+      {isInZoom && (
+        <button
+          onClick={setCameraMode}
+          disabled={isCameraActive}
+          className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${
+            isCameraActive
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+              : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+          title="Colocar timer sobre o seu vídeo para todos verem"
+        >
+          <Video className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{isCameraActive ? 'Na Câmera' : 'Vídeo'}</span>
+        </button>
+      )}
+    </div>
   )
 }

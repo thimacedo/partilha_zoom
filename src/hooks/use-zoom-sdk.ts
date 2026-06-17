@@ -5,6 +5,7 @@ export function useZoomSdk() {
   const [isInZoom, setIsInZoom] = useState(false)
   const [sdkError, setSdkError] = useState<string | null>(null)
   const [isHostOrCoHost, setIsHostOrCoHost] = useState(false)
+  const [runningContext, setRunningContext] = useState<string | null>(null)
 
   useEffect(() => {
     let zoomSdkInstance: any = null
@@ -24,12 +25,46 @@ export function useZoomSdk() {
               'openUrl',
               'sendAppInvitation',
               'getMeetingParticipants',
-              'onFeedbackReaction'
+              'onFeedbackReaction',
+              'runRenderingContext',
+              'setVideoOverlay',
+              'onMeetingConfigChanged',
+              'drawParticipant',
+              'drawWebView'
             ],
             version: '0.16'
           })
           console.log('Zoom Apps SDK initialized successfully:', configResponse)
           setIsInZoom(true)
+          setRunningContext(configResponse.runningContext)
+
+          // If we are in the camera context, setup the layers
+          if (configResponse.runningContext === 'inCamera') {
+            try {
+              const userContext = await zoomSdk.getUserContext()
+              // 1. Draw self as the background layer (zIndex 1)
+              // This is what allows others to see your camera + the app
+              await zoomSdk.drawParticipant({
+                participantUUID: userContext.participantUUID,
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 100,
+                zIndex: 1
+              })
+              // 2. Draw the app webview on top (zIndex 2)
+              await zoomSdk.drawWebView({
+                webviewId: 'camera',
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 100,
+                zIndex: 2
+              })
+            } catch (layerErr) {
+              console.error('Failed to setup camera layers:', layerErr)
+            }
+          }
 
           // Check user role
           try {
@@ -111,5 +146,16 @@ export function useZoomSdk() {
     }
   }
 
-  return { isInZoom, sdkError, isHostOrCoHost, shareApp, sendInvitation }
+  const setCameraMode = async () => {
+    try {
+      const { default: zoomSdk } = await import('@zoom/appssdk')
+      // Switch the app instance to camera view
+      await zoomSdk.runRenderingContext({ view: 'camera' })
+      console.log('Switched to Camera Rendering Context')
+    } catch (err: any) {
+      console.error('Failed to switch to camera mode:', err.message)
+    }
+  }
+
+  return { isInZoom, sdkError, isHostOrCoHost, runningContext, shareApp, sendInvitation, setCameraMode }
 }

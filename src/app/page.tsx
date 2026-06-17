@@ -24,7 +24,7 @@ import { Share2, Users } from 'lucide-react'
 export default function Home() {
   useTimer()
   useKeyboardShortcuts()
-  const { isInZoom, isHostOrCoHost, shareApp, sendInvitation } = useZoomSdk()
+  const { isInZoom, isHostOrCoHost, shareApp, sendInvitation, runningContext, setCameraMode } = useZoomSdk()
 
   // Sync dark mode class on <html>
   const darkMode = useTimerStore((s) => s.darkMode)
@@ -40,8 +40,16 @@ export default function Home() {
   const isRunning = useTimerStore((s) => s.isRunning)
   const phase = useTimerStore((s) => s.phase)
 
-  // The overlay auto-shows when running; overlayMode is the manual toggle
-  const overlayActive = overlayMode || isRunning || phase === 'timeUp'
+  // Specialized view for Camera Context (Immersive Mode)
+  // This is what will be rendered over the user's video feed for everyone
+  if (runningContext === 'inCamera') {
+    return (
+      <div className="fixed inset-0 pointer-events-none flex flex-col items-end p-4">
+        {/* Only render the Overlay content here */}
+        <OverlayTimer isCameraContext={true} />
+      </div>
+    )
+  }
 
   return (
     <TooltipProvider>
